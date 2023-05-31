@@ -47,68 +47,61 @@ class Api {
     );
   }
 
-  patchAuthor(name, description, successAction) {
+  patchAuthor(name, description) {
     return this._promiseGenerator(
       this._baseUrl + this._authorUrl,
       this._baseHeaders,
-      successAction,
       "PATCH",
       { name: name, about: description }
     );
   }
 
-  postCard(link, name, successAction) {
+  postCard(link, name) {
     return this._promiseGenerator(
       this._baseUrl + this._cardsUrl,
       this._baseHeaders,
-      successAction,
       "POST",
       { name: name, link: link }
     );
   }
 
-  deleteCard(cardId, successAction) {
+  deleteCard(cardId) {
     return this._promiseGenerator(
       this._baseUrl + this._cardUrl.template.replace(this._cardUrl.key, cardId),
       this._baseHeaders,
-      successAction,
       "DELETE"
     ).then(() => cardId);
   }
 
-  putLike(cardId, successAction) {
+  putLike(cardId) {
     return this._promiseGenerator(
       this._baseUrl + this._likeUrl.template.replace(this._likeUrl.key, cardId),
       this._baseHeaders,
-      successAction,
       "PUT"
     );
   }
 
-  deleteLike(cardId, successAction) {
+  deleteLike(cardId) {
     return this._promiseGenerator(
       this._baseUrl + this._likeUrl.template.replace(this._likeUrl.key, cardId),
       this._baseHeaders,
-      successAction,
       "DELETE"
     );
   }
 
-  patchAvatar(url, successAction) {
+  patchAvatar(url) {
     return this._promiseGenerator(
       this._baseUrl + this._authorAvatarUrl,
       this._baseHeaders,
-      successAction,
       "PATCH",
       { avatar: url }
     );
   }
 
-  register(email, password, successAction) {
+  register(email, password) {
     return this._promiseGenerator(
       this._authUrl + this._registerUrl,
       this._baseHeaders,
-      successAction,
       "POST",
       {
         email: email,
@@ -117,11 +110,10 @@ class Api {
     );
   }
 
-  login(email, password, successAction) {
+  login(email, password) {
     return this._promiseGenerator(
       this._authUrl + this._loginUrl,
       this._baseHeaders,
-      successAction,
       "POST",
       {
         email: email,

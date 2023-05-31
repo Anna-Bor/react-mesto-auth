@@ -25,7 +25,7 @@ function App() {
   const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = useState(false);
   const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] = useState(false);
   const [cards, setCards] = useState([]);
-  const [selectedCard, setSelectedCard] = useState(undefined);
+  const [selectedCard, setSelectedCard] = useState(null);
   const [isTooltipPopupOpen, setIsTooltipPopupOpen] = useState(false);
   const [tooltipStatus, setTooltipStatus] = useState(undefined);
   const [currentUser, setCurrentUser] = useState(undefined);
@@ -132,9 +132,10 @@ function App() {
   function login({ email, password }) {
     setIsLoading(true);
     api
-      .login(email, password, () => setCurrentUserEmail(email))
+      .login(email, password)
       .then((response) => {
         window.localStorage.setItem(localStorageKey, response.token);
+        setCurrentUserEmail(email);
         setIsLoggedIn(true);
         navigate("/", { replace: true });
       })
@@ -150,23 +151,30 @@ function App() {
 
   useEffect(() => {
     const token = window.localStorage.getItem(localStorageKey);
-
-    Promise.all([
-      token ? api.getAuthUser(token) : Promise.resolve(),
-      api.getAuthor(),
-      api.getInitialCards(),
-    ])
-      .then(([authUser, user, cards]) => {
-        if (authUser && authUser.data) {
-          setCurrentUserEmail(authUser.data.email);
-          setIsLoggedIn(true);
-          navigate("/", { replace: true });
-        }
-        setCurrentUser(user);
-        setCards(cards);
-      })
-      .catch((reason) => console.log(reason));
+    if (token) {
+      api
+        .getAuthUser(token)
+        .then((authUser) => {
+          if (authUser && authUser.data) {
+            setCurrentUserEmail(authUser.data.email);
+            setIsLoggedIn(true);
+            navigate("/", { replace: true });
+          }
+        })
+        .catch((reason) => console.log(reason));
+    }
   }, []);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      Promise.all([api.getAuthor(), api.getInitialCards()])
+        .then(([user, cards]) => {
+          setCurrentUser(user);
+          setCards(cards);
+        })
+        .catch((reason) => console.log(reason));
+    }
+  }, [isLoggedIn]);
 
   useEffect(() => {
     function closeByEscape(event) {
