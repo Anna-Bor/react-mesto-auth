@@ -1,4 +1,4 @@
-import { credentials, urls } from "./constants";
+import { urls } from "./constants";
 import { createPromise } from "./utils";
 
 class Api {
@@ -10,12 +10,10 @@ class Api {
       authorAvatarUrl,
       cardUrl,
       likeUrl,
-      authUrl,
       registerUrl,
       loginUrl,
       userUrl,
     },
-    authHeaders,
     promiseGenerator
   ) {
     this._baseUrl = baseUrl;
@@ -25,74 +23,72 @@ class Api {
     this._authorAvatarUrl = authorAvatarUrl;
     this._cardUrl = cardUrl;
     this._likeUrl = likeUrl;
-    this._promiseGenerator = promiseGenerator;
-    this._authUrl = authUrl;
     this._registerUrl = registerUrl;
     this._loginUrl = loginUrl;
     this._userUrl = userUrl;
-    this._authHeaders = authHeaders;
+    this._promiseGenerator = promiseGenerator;
   }
 
-  getInitialCards() {
-    return this._promiseGenerator(
-      this._baseUrl + this._cardsUrl,
-      this._baseHeaders
-    );
+  getInitialCards(token) {
+    return this._promiseGenerator(this._baseUrl + this._cardsUrl, {
+      ...this._baseHeaders,
+      authorization: token,
+    });
   }
 
-  getAuthor() {
+  getAuthor(token) {
+    return this._promiseGenerator(this._baseUrl + this._authorUrl, {
+      ...this._baseHeaders,
+      authorization: token,
+    });
+  }
+
+  patchAuthor(name, description, token) {
     return this._promiseGenerator(
       this._baseUrl + this._authorUrl,
-      this._baseHeaders
-    );
-  }
-
-  patchAuthor(name, description) {
-    return this._promiseGenerator(
-      this._baseUrl + this._authorUrl,
-      this._baseHeaders,
+      { ...this._baseHeaders, authorization: token },
       "PATCH",
       { name: name, about: description }
     );
   }
 
-  postCard(link, name) {
+  postCard(link, name, token) {
     return this._promiseGenerator(
       this._baseUrl + this._cardsUrl,
-      this._baseHeaders,
+      { ...this._baseHeaders, authorization: token },
       "POST",
       { name: name, link: link }
     );
   }
 
-  deleteCard(cardId) {
+  deleteCard(cardId, token) {
     return this._promiseGenerator(
       this._baseUrl + this._cardUrl.template.replace(this._cardUrl.key, cardId),
-      this._baseHeaders,
+      { ...this._baseHeaders, authorization: token },
       "DELETE"
     ).then(() => cardId);
   }
 
-  putLike(cardId) {
+  putLike(cardId, token) {
     return this._promiseGenerator(
       this._baseUrl + this._likeUrl.template.replace(this._likeUrl.key, cardId),
-      this._baseHeaders,
+      { ...this._baseHeaders, authorization: token },
       "PUT"
     );
   }
 
-  deleteLike(cardId) {
+  deleteLike(cardId, token) {
     return this._promiseGenerator(
       this._baseUrl + this._likeUrl.template.replace(this._likeUrl.key, cardId),
-      this._baseHeaders,
+      { ...this._baseHeaders, authorization: token },
       "DELETE"
     );
   }
 
-  patchAvatar(url) {
+  patchAvatar(url, token) {
     return this._promiseGenerator(
       this._baseUrl + this._authorAvatarUrl,
-      this._baseHeaders,
+      { ...this._baseHeaders, authorization: token },
       "PATCH",
       { avatar: url }
     );
@@ -100,7 +96,7 @@ class Api {
 
   register(email, password) {
     return this._promiseGenerator(
-      this._authUrl + this._registerUrl,
+      this._baseUrl + this._registerUrl,
       this._baseHeaders,
       "POST",
       {
@@ -112,7 +108,7 @@ class Api {
 
   login(email, password) {
     return this._promiseGenerator(
-      this._authUrl + this._loginUrl,
+      this._baseUrl + this._loginUrl,
       this._baseHeaders,
       "POST",
       {
@@ -123,24 +119,20 @@ class Api {
   }
 
   getAuthUser(token) {
-    return this._promiseGenerator(this._authUrl + this._userUrl, {
-      ...this._authHeaders,
-      Authorization: `Bearer ${token}`,
+    return this._promiseGenerator(this._baseUrl + this._userUrl, {
+      ...this._baseHeaders,
+      authorization: token,
     });
   }
 }
 
 export const api = new Api(
   {
-    baseUrl: `${urls.baseUrl}/${credentials.group}/`,
+    baseUrl: `${urls.baseUrl}/`,
     baseHeaders: {
-      authorization: credentials.token,
       "Content-Type": "application/json",
     },
   },
   urls,
-  {
-    "Content-Type": "application/json",
-  },
   createPromise
 );

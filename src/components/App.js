@@ -31,7 +31,6 @@ function App() {
   const [currentUser, setCurrentUser] = useState(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentUserEmail, setCurrentUserEmail] = useState("");
   const isOpen =
     tooltipStatus ||
     isEditProfilePopupOpen ||
@@ -55,8 +54,8 @@ function App() {
 
   function handleCardLike(card) {
     (card.likes.some((i) => i._id === currentUser._id)
-      ? api.deleteLike(card._id)
-      : api.putLike(card._id)
+      ? api.deleteLike(card._id, window.localStorage.getItem(localStorageKey))
+      : api.putLike(card._id, window.localStorage.getItem(localStorageKey))
     )
       .then((newCard) => {
         setCards((state) =>
@@ -69,7 +68,7 @@ function App() {
   function handleCardDelete(card) {
     setIsLoading(true);
     api
-      .deleteCard(card._id)
+      .deleteCard(card._id, window.localStorage.getItem(localStorageKey))
       .then(() => {
         setCards((state) => state.filter((x) => x !== card));
       })
@@ -80,7 +79,11 @@ function App() {
   function handleUpdateUser({ name, description }) {
     setIsLoading(true);
     api
-      .patchAuthor(name, description)
+      .patchAuthor(
+        name,
+        description,
+        window.localStorage.getItem(localStorageKey)
+      )
       .then((newAuthor) => {
         setCurrentUser(newAuthor);
         closeAllPopups();
@@ -92,7 +95,7 @@ function App() {
   function handleUpdateAvatar({ avatar }) {
     setIsLoading(true);
     api
-      .patchAvatar(avatar)
+      .patchAvatar(avatar, window.localStorage.getItem(localStorageKey))
       .then((newAuthor) => {
         setCurrentUser(newAuthor);
         closeAllPopups();
@@ -104,7 +107,7 @@ function App() {
   function handleAddPlace({ link, name }) {
     setIsLoading(true);
     api
-      .postCard(link, name)
+      .postCard(link, name, window.localStorage.getItem(localStorageKey))
       .then((newCard) => {
         setCards([newCard, ...cards]);
         closeAllPopups();
@@ -135,9 +138,17 @@ function App() {
       .login(email, password)
       .then((response) => {
         window.localStorage.setItem(localStorageKey, response.token);
-        setCurrentUserEmail(email);
         setIsLoggedIn(true);
         navigate("/", { replace: true });
+        return response.token;
+      })
+      .then((token) => api.getAuthUser(token))
+      .then((authUser) => {
+        if (authUser) {
+          setCurrentUser(authUser);
+          setIsLoggedIn(true);
+          navigate("/", { replace: true });
+        }
       })
       .catch((reason) => console.log(reason))
       .finally(() => setIsLoading(false));
@@ -145,7 +156,7 @@ function App() {
 
   function logout() {
     window.localStorage.removeItem(localStorageKey);
-    setCurrentUserEmail("");
+    setCurrentUser(undefined);
     setIsLoggedIn(false);
   }
 
@@ -155,8 +166,8 @@ function App() {
       api
         .getAuthUser(token)
         .then((authUser) => {
-          if (authUser && authUser.data) {
-            setCurrentUserEmail(authUser.data.email);
+          if (authUser) {
+            setCurrentUser(authUser);
             setIsLoggedIn(true);
             navigate("/", { replace: true });
           }
@@ -167,7 +178,10 @@ function App() {
 
   useEffect(() => {
     if (isLoggedIn) {
-      Promise.all([api.getAuthor(), api.getInitialCards()])
+      Promise.all([
+        api.getAuthor(window.localStorage.getItem(localStorageKey)),
+        api.getInitialCards(window.localStorage.getItem(localStorageKey)),
+      ])
         .then(([user, cards]) => {
           setCurrentUser(user);
           setCards(cards);
@@ -188,7 +202,7 @@ function App() {
 
   return (
     <CurrentUserContext.Provider value={currentUser}>
-      <Header email={currentUserEmail} onLogout={logout} />
+      <Header email={currentUser?.email ?? ""} onLogout={logout} />
       <main className="content">
         <Routes>
           <Route

@@ -1,10 +1,5 @@
-export const credentials = {
-  token: "0a88d0d7-8d1d-4869-baea-7caf49dae627",
-  group: "cohort-63",
-};
-
 export const urls = {
-  baseUrl: "https://mesto.nomoreparties.co/v1",
+  baseUrl: "https://api.annabor.nomoreparties.sbs",
   cardsUrl: "cards",
   authorUrl: "users/me",
   authorAvatarUrl: "users/me/avatar",
@@ -16,10 +11,9 @@ export const urls = {
     template: "cards/{{cardId}}/likes",
     key: "{{cardId}}",
   },
-  authUrl: "https://auth.nomoreparties.co",
-  registerUrl: "/signup",
-  loginUrl: "/signin",
-  userUrl: "/users/me",
+  registerUrl: "signup",
+  loginUrl: "signin",
+  userUrl: "users/me",
 };
 
 export const localStorageKey = "mesto-token";
